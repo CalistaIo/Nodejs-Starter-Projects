@@ -19,7 +19,7 @@ app.use(express.static(publicDirectoryPath));
 
 app.get('', (req, res) => {
     res.render('index', {
-        title: 'Weather App',
+        title: 'Weather',
         name: 'Calista Io'
     });
 });
@@ -30,6 +30,19 @@ app.get('/weather', (req, res) => {
         location: 'Singapore'
     });
 
+});
+
+app.get('/products', (req, res) => {
+    if (!req.query.search) {
+        res.send({
+            error: 'You must provide a search term'
+        });
+    } else {
+        console.log(req.query);
+        res.send({
+            products: []
+        });
+    }
 });
 
 app.get('/about', (req, res) => {
