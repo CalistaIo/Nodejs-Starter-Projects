@@ -1,6 +1,7 @@
 const express = require('express');
 const router = new express.Router();
 const User = require('../models/user.js');
+const auth = require('../middleware/auth.js');
 
 router.get('/test', (req, res) => {
     res.send('From a new file');
@@ -10,8 +11,8 @@ router.get('/test', (req, res) => {
 router.post('/users', async (req, res) => {
     const user = new User(req.body);
     try {
-        await user.save();
-        res.status(201).send(user);
+        const token = await user.generateAuthToken(); // user is saved inside this method
+        res.status(201).send({user, token});
     } catch (e) {
         res.status(400).send(e);
     }
@@ -26,20 +27,22 @@ router.post('/users', async (req, res) => {
 router.post('/users/login', async (req, res) => {
     try {
         const user = await User.findByCredentials(req.body.email, req.body.password);
-        res.send(user);
+        const token = await user.generateAuthToken();
+        res.send({user, token});
     } catch (e) {
         res.status(400).send();
     }
 });
 
-// Get all users
-router.get('/users', async (req, res) => {
-    try {
-        const users = await User.find({});
-        res.send(users);
-    } catch (e) {
-        res.status(500).send();
-    }
+// Get own user data after authentication
+router.get('/users/me', auth, async (req, res) => {
+    res.send(req.user);
+    // try {
+    //     const users = await User.find({});
+    //     res.send(users);
+    // } catch (e) {
+    //     res.status(500).send();
+    // }
     // User.find({}).then((users) => {
     //     res.send(users);
     // }).catch((error) => {
