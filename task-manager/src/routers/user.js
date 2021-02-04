@@ -28,11 +28,41 @@ router.post('/users/login', async (req, res) => {
     try {
         const user = await User.findByCredentials(req.body.email, req.body.password);
         const token = await user.generateAuthToken();
+        // res.send({user: user.getPublicProfile(), token});
         res.send({user, token});
     } catch (e) {
         res.status(400).send();
     }
 });
+
+// Logout
+router.post('/users/logout', auth, async (req, res) => {
+    try {
+        const user = req.user;
+        user.tokens = user.tokens.filter((token) => { // remove token that was used for authentication
+            return token.token != req.token;
+        });
+        await user.save();
+        res.send();
+    } catch (e) {
+        res.status(500).send();
+    }
+});
+
+// Logout of all accounts
+router.post('/users/logoutAll', auth, async (req, res) => {
+    try {
+        const user = req.user;
+        // user.tokens = user.tokens.filter((token) => {
+        //     return false;
+        // });
+        user.tokens = [];
+        await user.save();
+        res.send();
+    } catch (e) {
+        res.status(500).send();
+    }
+})
 
 // Get own user data after authentication
 router.get('/users/me', auth, async (req, res) => {
