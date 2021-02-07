@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 
-// task stores id of user whom it belongs to
-const Task = mongoose.model('Task', {
+const taskSchema = mongoose.Schema({
     description: {
         type: String,
         required: true,
@@ -16,6 +15,11 @@ const Task = mongoose.model('Task', {
         required: true,
         ref: 'User'
     }
+}, {
+    timestamps: true
 });
+
+// task stores id of user whom it belongs to
+const Task = mongoose.model('Task', taskSchema);
 
 module.exports = Task;
