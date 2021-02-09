@@ -4,6 +4,7 @@ const User = require('../models/user.js');
 const auth = async (req, res, next) => {
     try {
         const token = req.header('Authorization').replace('Bearer ', '');
+        // const token = req.cookies['auth_token'];
         const decoded = jwt.verify(token, 'thisismynewcourse'); // is there an actual id for this token?
         const user = await User.findOne({_id: decoded._id, 'tokens.token': token}); // does the user with this id still have the token?
         if (!user) {

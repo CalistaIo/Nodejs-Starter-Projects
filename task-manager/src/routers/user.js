@@ -4,12 +4,17 @@ const User = require('../models/user.js');
 const auth = require('../middleware/auth.js');
 const multer = require('multer');
 const sharp = require('sharp');
+const path = require('path');
+const { sendWelcomeEmail, sendCancelEmail } = require('../emails/account.js');
 
 // Create user
 router.post('/users', async (req, res) => {
     const user = new User(req.body);
     try {
         const token = await user.generateAuthToken(); // user is saved inside this method
+        // res.cookie('auth_token', token);
+        // res.sendFile(path.resolve(__dirname, '..', 'views', 'private.html'));
+        sendWelcomeEmail(user.email, user.name);
         res.status(201).send({user, token});
     } catch (e) {
         res.status(400).send(e);
@@ -26,6 +31,8 @@ router.post('/users/login', async (req, res) => {
     try {
         const user = await User.findByCredentials(req.body.email, req.body.password);
         const token = await user.generateAuthToken();
+        // res.cookie('auth_token', token);
+        // res.sendFile(path.resolve(__dirname, '..', 'views', 'private.html'));
         // res.send({user: user.getPublicProfile(), token});
         res.send({user, token});
     } catch (e) {
@@ -99,6 +106,7 @@ router.patch('/users/me', auth, async (req, res) => {
 // delete user
 router.delete('/users/me', auth, async (req, res) => {
     try {
+        sendCancelEmail(req.user.email, req.user.name);
         await req.user.remove();
         res.send(req.user);
     } catch (e) {
