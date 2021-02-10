@@ -7,15 +7,24 @@ const sharp = require('sharp');
 const path = require('path');
 const { sendWelcomeEmail, sendCancelEmail } = require('../emails/account.js');
 
+router.get('/', (req, res) => {
+    res.render('index');
+})
+
+router.get('/users', auth, async (req, res) => {
+    res.render('private', {name: req.user.name});
+});
+
 // Create user
 router.post('/users', async (req, res) => {
     const user = new User(req.body);
     try {
         const token = await user.generateAuthToken(); // user is saved inside this method
-        // res.cookie('auth_token', token);
+        res.cookie('auth_token', token);
         // res.sendFile(path.resolve(__dirname, '..', 'views', 'private.html'));
         sendWelcomeEmail(user.email, user.name);
-        res.status(201).send({user, token});
+        // res.status(201).send({user, token});
+        res.render('private', {name: user.name});
     } catch (e) {
         res.status(400).send(e);
     }
@@ -26,16 +35,23 @@ router.post('/users', async (req, res) => {
     // });
 });
 
+router.get('/users/login', auth, async (req, res) => {
+    res.render('private', {name: req.user.name});
+});
+
 // Find user using credentials
 router.post('/users/login', async (req, res) => {
     try {
         const user = await User.findByCredentials(req.body.email, req.body.password);
         const token = await user.generateAuthToken();
-        // res.cookie('auth_token', token);
-        // res.sendFile(path.resolve(__dirname, '..', 'views', 'private.html'));
+        res.cookie('auth_token', token);
         // res.send({user: user.getPublicProfile(), token});
-        res.send({user, token});
+        // res.send({user, token});
+        // res.sendFile(path.resolve(__dirname, '..', 'views', 'private.html'));
+        // res.render('private', {name: user.name});
+        res.redirect('/users/login');
     } catch (e) {
+        console.log(e);
         res.status(400).send();
     }
 });
@@ -48,7 +64,9 @@ router.post('/users/logout', auth, async (req, res) => {
             return token.token != req.token;
         });
         await user.save();
-        res.send();
+        // res.send();
+        // res.redirect('/users/login');
+        res.redirect('/');
     } catch (e) {
         res.status(500).send();
     }
